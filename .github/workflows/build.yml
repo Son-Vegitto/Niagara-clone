@@ -23,7 +23,7 @@ jobs:
 
     - name: Fix Line Endings and Permissions for Gradlew
       run: |
-        sed -i 's/\r$//' gradlew
+        sed -i 's/\r$//' gradlew || true
         chmod +x gradlew
 
     - name: Generate Release Keystore
@@ -33,21 +33,17 @@ jobs:
           -storepass androidpassword -keypass androidpassword \
           -dname "CN=NiagaraClone, OU=Dev, O=Launcher, L=City, S=State, C=US"
 
-    - name: Build Release APK
-      run: ./gradlew assembleRelease
-
-    - name: Sign APK with apksigner
+    - name: Build and Sign Release APK
       run: |
-        $ANDROID_HOME/build-tools/34.0.0/apksigner sign \
-          --ks release.keystore \
-          --ks-pass pass:androidpassword \
-          --key-pass pass:androidpassword \
-          --out app/build/outputs/apk/release/NiagaraClone-Release.apk \
-          app/build/outputs/apk/release/app-release-unsigned.apk
+        ./gradlew assembleRelease \
+          -Pandroid.injected.signing.store.file=$(pwd)/release.keystore \
+          -Pandroid.injected.signing.store.password=androidpassword \
+          -Pandroid.injected.signing.key.alias=my-key-alias \
+          -Pandroid.injected.signing.key.password=androidpassword
 
     - name: Upload Clean Release APK
       uses: actions/upload-artifact@v4
       with:
         name: NiagaraClone-Release-APK
-        path: app/build/outputs/apk/release/NiagaraClone-Release.apk
+        path: app/build/outputs/apk/release/*.apk
         
