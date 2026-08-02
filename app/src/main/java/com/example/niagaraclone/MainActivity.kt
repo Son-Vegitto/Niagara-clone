@@ -1,16 +1,17 @@
 package com.example.niagaraclone
 
+import android.app.role.RoleManager
+import android.appwidget.AppWidgetHost
+import android.appwidget.AppWidgetManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.ResolveInfo
-import android.graphics.drawable.Drawable
 import android.os.BatteryManager
+import android.os.Build
 import android.os.Bundle
-import android.appwidget.AppWidgetHost
-import android.appwidget.AppWidgetManager
-import android.appwidget.AppWidgetProviderInfo
+import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
@@ -25,15 +26,13 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -43,11 +42,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.graphics.drawable.toBitmap
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.xmlpull.v1.XmlPullParser
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -85,6 +82,21 @@ class MainActivity : ComponentActivity() {
     override fun onStop() {
         super.onStop()
         appWidgetHost.stopListening()
+    }
+
+    companion object {
+        fun openDefaultLauncherSettings(context: Context) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                val roleManager = context.getSystemService(Context.ROLE_SERVICE) as? RoleManager
+                if (roleManager?.isRoleAvailable(RoleManager.ROLE_HOME) == true) {
+                    val intent = roleManager.createRequestRoleIntent(RoleManager.ROLE_HOME)
+                    context.startActivity(intent)
+                    return
+                }
+            }
+            val intent = Intent(Settings.ACTION_HOME_SETTINGS)
+            context.startActivity(intent)
+        }
     }
 }
 
@@ -453,6 +465,15 @@ fun AppOptionsModal(
                     ) {
                         Text("Change Icon (Lawnicons)")
                     }
+                    TextButton(
+                        onClick = {
+                            MainActivity.openDefaultLauncherSettings(context)
+                            onDismiss()
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Set as Default Launcher")
+                    }
                 }
             },
             confirmButton = {
@@ -491,26 +512,4 @@ fun CustomizableHeader(
                 intent?.let {
                     val level = it.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
                     val scale = it.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
-                    val status = it.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
-                    if (level != -1 && scale != -1) {
-                        batteryLevel = (level * 100 / scale.toFloat()).toInt()
-                    }
-                    isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
-                                 status == BatteryManager.BATTERY_STATUS_PLUGGED_AC
-                }
-            }
-        }
-        val filter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
-        context.registerReceiver(receiver, filter)
-
-        onDispose {
-            context.unregisterReceiver(receiver)
-        }
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = 20.dp, top = 16.dp, end = 20.dp, bottom = 8.dp)
-    ) {
-        itemsOrder.forEachIndexe
+                    
