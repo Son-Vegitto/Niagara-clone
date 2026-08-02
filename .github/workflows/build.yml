@@ -21,8 +21,12 @@ jobs:
         distribution: 'temurin'
         cache: gradle
 
-    - name: Fix Line Endings and Permissions for Gradlew
+    - name: Ensure Gradle Wrapper Exists
       run: |
+        if [ ! -f "gradlew" ]; then
+          echo "gradlew not found, initializing Gradle wrapper..."
+          gradle wrapper
+        fi
         sed -i 's/\r$//' gradlew || true
         chmod +x gradlew
 
