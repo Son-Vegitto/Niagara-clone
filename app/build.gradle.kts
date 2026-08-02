@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.niagaraclone"
+    namespace = "com.niagaraclone"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.niagaraclone"
+        applicationId = "com.niagaraclone"
         minSdk = 26
         targetSdk = 34
         versionCode = 1
