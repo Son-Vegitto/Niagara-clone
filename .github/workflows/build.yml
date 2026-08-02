@@ -20,10 +20,14 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
+    # Updated from deprecated gradle/gradle-build-action@v3
     - name: Setup Gradle
-      uses: gradle/gradle-build-action@v3
+      uses: gradle/actions/setup-gradle@v4
       with:
         gradle-version: 8.4
+
+    - name: Make Gradle Wrapper Executable
+      run: chmod +x gradlew
 
     - name: Generate Release Keystore
       run: |
@@ -32,9 +36,10 @@ jobs:
           -storepass androidpassword -keypass androidpassword \
           -dname "CN=NiagaraClone, OU=Dev, O=Launcher, L=City, S=State, C=US"
 
+    # Switched 'gradle' to './gradlew' for consistency and reliability
     - name: Build and Sign Release APK
       run: |
-        gradle assembleRelease --stacktrace \
+        ./gradlew assembleRelease --stacktrace \
           -Pandroid.injected.signing.store.file=$(pwd)/release.keystore \
           -Pandroid.injected.signing.store.password=androidpassword \
           -Pandroid.injected.signing.key.alias=my-key-alias \
