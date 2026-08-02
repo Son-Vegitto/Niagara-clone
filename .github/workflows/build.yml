@@ -39,11 +39,19 @@ jobs:
 
     - name: Build and Sign Release APK
       run: |
-        ./gradlew assembleRelease \
+        ./gradlew assembleRelease --stacktrace \
           -Pandroid.injected.signing.store.file=$(pwd)/release.keystore \
           -Pandroid.injected.signing.store.password=androidpassword \
           -Pandroid.injected.signing.key.alias=my-key-alias \
-          -Pandroid.injected.signing.key.password=androidpassword
+          -Pandroid.injected.signing.key.password=androidpassword 2>&1 | tee build.log || exit 1
+
+    - name: Print Error Summary on Failure
+      if: failure()
+      run: |
+        echo "### ❌ Build Failure Log" >> $GITHUB_STEP_SUMMARY
+        echo "\`\`\`text" >> $GITHUB_STEP_SUMMARY
+        grep -A 10 "What went wrong:" build.log || tail -n 25 build.log >> $GITHUB_STEP_SUMMARY
+        echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
 
     - name: Upload Clean Release APK
       uses: actions/upload-artifact@v4
