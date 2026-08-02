@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 
-// Helper function to list installed apps
+// Helper to list installed apps
 fun getInstalledApps(context: Context): List<ResolveInfo> {
     val mainIntent = Intent(Intent.ACTION_MAIN, null).apply {
         addCategory(Intent.CATEGORY_LAUNCHER)
@@ -27,7 +27,7 @@ class IconPackManager(private val context: Context) {
     fun setCustomIcon(packageName: String, drawableName: String) {}
 }
 
-// Dialog Stub
+// Icon Dialog Stub
 @Composable
 fun IconPickerDialog(
     app: ResolveInfo,
