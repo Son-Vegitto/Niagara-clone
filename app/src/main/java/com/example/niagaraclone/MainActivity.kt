@@ -1,4 +1,4 @@
-package com.example.niagaraclone
+package com.niagaraclone
 
 import android.app.role.RoleManager
 import android.appwidget.AppWidgetHost
@@ -512,4 +512,78 @@ fun CustomizableHeader(
                 intent?.let {
                     val level = it.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
                     val scale = it.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
-                    
+                    val status = it.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
+                    if (level != -1 && scale != -1) {
+                        batteryLevel = (level * 100 / scale.toFloat()).toInt()
+                    }
+                    isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
+                                 status == BatteryManager.BATTERY_STATUS_PLUGGED_AC
+                }
+            }
+        }
+        val filter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+        context.registerReceiver(receiver, filter)
+
+        onDispose {
+            context.unregisterReceiver(receiver)
+        }
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 20.dp, top = 16.dp, end = 20.dp, bottom = 8.dp)
+    ) {
+        itemsOrder.forEachIndexed { index, item ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(modifier = Modifier.weight(1f)) {
+                    when (item) {
+                        HeaderItem.CLOCK -> {
+                            Text(
+                                text = currentTime,
+                                fontSize = 48.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                        }
+                        HeaderItem.DATE_WEATHER -> {
+                            Text(
+                                text = currentDate,
+                                fontSize = 16.sp,
+                                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+                            )
+                        }
+                        HeaderItem.BATTERY -> {
+                            Text(
+                                text = "Battery: $batteryLevel%${if (isCharging) " (Charging)" else ""}",
+                                fontSize = 14.sp,
+                                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
+                            )
+                        }
+                    }
+                }
+
+                if (isEditMode) {
+                    Row {
+                        if (index > 0) {
+                            IconButton(onClick = {
+                                val elem = itemsOrder.removeAt(index)
+                                itemsOrder.add(index - 1, elem)
+                            }) { Text("▲", fontSize = 12.sp) }
+                        }
+                        if (index < itemsOrder.size - 1) {
+                            IconButton(onClick = {
+                                val elem = itemsOrder.removeAt(index)
+                                itemsOrder.add(index + 1, elem)
+                            }) { Text("▼", fontSize = 12.sp) }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
